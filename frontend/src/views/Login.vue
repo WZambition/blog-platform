@@ -14,15 +14,18 @@
         <el-tab-pane label="登录" name="login">
           <el-form :model="loginForm" label-width="0" @submit.prevent>
             <el-form-item>
-              <el-input v-model="loginForm.username" placeholder="用户名" size="large">
+              <el-input v-model="loginForm.username" placeholder="邮箱 / 手机号" size="large">
                 <template #prefix><el-icon><User /></el-icon></template>
               </el-input>
             </el-form-item>
             <el-form-item>
-              <el-input v-model="loginForm.password" type="password" placeholder="密码" size="large" show-password>
+              <el-input v-model="loginForm.password" type="password" placeholder="密码" size="large" show-password @keyup.enter="handleLogin">
                 <template #prefix><el-icon><Lock /></el-icon></template>
               </el-input>
             </el-form-item>
+            <div class="login-options">
+              <span class="forgot-link" @click="openForgotDialog">忘记密码？</span>
+            </div>
             <el-button type="primary" size="large" style="width: 100%" :loading="loading" @click="handleLogin">
               登录
             </el-button>
@@ -32,8 +35,8 @@
         <el-tab-pane label="注册" name="register">
           <el-form :model="registerForm" label-width="0" @submit.prevent>
             <el-form-item>
-              <el-input v-model="registerForm.username" placeholder="用户名" size="large">
-                <template #prefix><el-icon><User /></el-icon></template>
+              <el-input v-model="registerForm.username" placeholder="邮箱或手机号" size="large">
+                <template #prefix><el-icon><Message /></el-icon></template>
               </el-input>
             </el-form-item>
             <el-form-item>
@@ -44,6 +47,19 @@
             <el-form-item>
               <el-input v-model="registerForm.password" type="password" placeholder="密码" size="large" show-password>
                 <template #prefix><el-icon><Lock /></el-icon></template>
+              </el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-select v-model="registerForm.securityQuestion" placeholder="选择安全问题" size="large" style="width: 100%">
+                <el-option label="你的出生城市是？" value="你的出生城市是？" />
+                <el-option label="你的小学名称是？" value="你的小学名称是？" />
+                <el-option label="你最喜欢的宠物名字是？" value="你最喜欢的宠物名字是？" />
+                <el-option label="你母亲的姓氏是？" value="你母亲的姓氏是？" />
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-input v-model="registerForm.securityAnswer" placeholder="安全问题答案（用于找回密码）" size="large">
+                <template #prefix><el-icon><Key /></el-icon></template>
               </el-input>
             </el-form-item>
             <el-button type="primary" size="large" style="width: 100%" :loading="loading" @click="handleRegister">
@@ -68,6 +84,31 @@
         <el-icon><ArrowLeft /></el-icon> 返回首页
       </div>
     </div>
+
+    <!-- 忘记密码弹窗 -->
+    <el-dialog v-model="forgotVisible" title="找回密码" width="420px" :close-on-click-modal="false">
+      <el-form :model="forgotForm" label-width="0" @submit.prevent>
+        <el-form-item>
+          <el-input v-model="forgotForm.username" placeholder="注册时使用的邮箱或手机号" size="large">
+            <template #prefix><el-icon><Message /></el-icon></template>
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-input v-model="forgotForm.securityAnswer" placeholder="安全问题答案" size="large">
+            <template #prefix><el-icon><Key /></el-icon></template>
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-input v-model="forgotForm.newPassword" type="password" placeholder="设置新密码" size="large" show-password>
+            <template #prefix><el-icon><Lock /></el-icon></template>
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="forgotVisible = false">取消</el-button>
+        <el-button type="primary" :loading="resetting" @click="handleResetPassword">重置密码</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -76,6 +117,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../store/user'
+import { userApi } from '../api'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -85,11 +127,27 @@ const loading = ref(false)
 const guestName = ref('')
 
 const loginForm = ref({ username: '', password: '' })
-const registerForm = ref({ username: '', nickname: '', password: '' })
+const registerForm = ref({
+  username: '',
+  nickname: '',
+  password: '',
+  securityQuestion: '',
+  securityAnswer: ''
+})
+
+// 忘记密码
+const forgotVisible = ref(false)
+const resetting = ref(false)
+const forgotForm = ref({ username: '', securityAnswer: '', newPassword: '' })
+
+function openForgotDialog() {
+  forgotForm.value = { username: '', securityAnswer: '', newPassword: '' }
+  forgotVisible.value = true
+}
 
 async function handleLogin() {
   if (!loginForm.value.username || !loginForm.value.password) {
-    ElMessage.warning('请输入用户名和密码')
+    ElMessage.warning('请输入邮箱/手机号和密码')
     return
   }
   loading.value = true
@@ -105,13 +163,26 @@ async function handleLogin() {
 }
 
 async function handleRegister() {
-  if (!registerForm.value.username || !registerForm.value.password) {
-    ElMessage.warning('请输入用户名和密码')
+  const f = registerForm.value
+  if (!f.username) {
+    ElMessage.warning('请输入邮箱或手机号')
+    return
+  }
+  if (!f.password) {
+    ElMessage.warning('请输入密码')
+    return
+  }
+  if (!f.securityQuestion) {
+    ElMessage.warning('请选择安全问题')
+    return
+  }
+  if (!f.securityAnswer) {
+    ElMessage.warning('请输入安全问题答案')
     return
   }
   loading.value = true
   try {
-    await userStore.register(registerForm.value)
+    await userStore.register(f)
     ElMessage.success('注册成功，已自动登录')
     router.push('/')
   } catch (e) {
@@ -131,6 +202,39 @@ async function handleGuest() {
     // 错误已提示
   } finally {
     loading.value = false
+  }
+}
+
+async function handleResetPassword() {
+  const f = forgotForm.value
+  if (!f.username) {
+    ElMessage.warning('请输入注册的邮箱或手机号')
+    return
+  }
+  if (!f.securityAnswer) {
+    ElMessage.warning('请输入安全问题答案')
+    return
+  }
+  if (!f.newPassword) {
+    ElMessage.warning('请输入新密码')
+    return
+  }
+  resetting.value = true
+  try {
+    await userApi.resetPassword({
+      username: f.username,
+      securityAnswer: f.securityAnswer,
+      password: f.newPassword
+    })
+    ElMessage.success('密码重置成功，请用新密码登录')
+    forgotVisible.value = false
+    activeTab.value = 'login'
+    loginForm.value.username = f.username
+    loginForm.value.password = ''
+  } catch (e) {
+    // 错误已提示
+  } finally {
+    resetting.value = false
   }
 }
 </script>
@@ -178,6 +282,22 @@ async function handleGuest() {
 .login-header p {
   color: #909399;
   font-size: 13px;
+}
+
+.login-options {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.forgot-link {
+  color: #409EFF;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
 }
 
 .guest-login {

@@ -48,6 +48,15 @@ public class UserController {
     }
 
     /**
+     * 忘记密码：根据账号（邮箱/手机号）和安全问题答案重置密码
+     */
+    @PostMapping("/reset-password")
+    public ApiResponse<Map<String, Object>> resetPassword(@RequestBody UserRequest request) {
+        User user = userService.resetPassword(request.getUsername(), request.getSecurityAnswer(), request.getPassword());
+        return ApiResponse.success("密码重置成功", buildUserMap(user));
+    }
+
+    /**
      * 获取用户信息
      */
     @GetMapping("/{id}")
@@ -61,6 +70,8 @@ public class UserController {
         map.put("id", user.getId());
         map.put("username", user.getUsername());
         map.put("nickname", user.getNickname());
+        map.put("email", user.getEmail());
+        map.put("phone", user.getPhone());
         map.put("avatar", user.getAvatar());
         map.put("bio", user.getBio());
         map.put("createdAt", user.getCreatedAt());

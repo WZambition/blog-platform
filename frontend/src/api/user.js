@@ -13,6 +13,10 @@ export const userApi = {
   guestLogin(data) {
     return request.post('/users/guest', data)
   },
+  // 忘记密码（安全问题重置）
+  resetPassword(data) {
+    return request.post('/users/reset-password', data)
+  },
   // 获取用户信息
   getUser(id) {
     return request.get(`/users/${id}`)

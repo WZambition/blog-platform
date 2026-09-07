@@ -17,7 +17,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** 用户名 */
+    /** 用户名（邮箱或手机号） */
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
@@ -25,9 +25,25 @@ public class User {
     @Column(nullable = false, length = 50)
     private String nickname;
 
-    /** 密码（演示环境明文存储，生产请加密） */
+    /** 密码（BCrypt 加密存储） */
     @Column(nullable = false)
     private String password;
+
+    /** 邮箱 */
+    @Column(length = 100)
+    private String email;
+
+    /** 手机号 */
+    @Column(length = 20)
+    private String phone;
+
+    /** 安全问题 */
+    @Column(length = 200)
+    private String securityQuestion;
+
+    /** 安全问题答案 */
+    @Column(length = 200)
+    private String securityAnswer;
 
     /** 头像URL */
     @Column(length = 255)
