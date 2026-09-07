@@ -18,6 +18,9 @@
           <router-link to="/tech" class="nav-link" active-class="active">
             <el-icon><ChatDotRound /></el-icon> 技术讨论区
           </router-link>
+          <router-link to="/blog" class="nav-link" active-class="active">
+            <el-icon><Notebook /></el-icon> 博客
+          </router-link>
         </nav>
 
         <div class="nav-right">
@@ -59,7 +62,7 @@
 
     <!-- 页脚 -->
     <footer class="footer">
-      <p>星语博客 · AI观点星空 & 技术讨论区 · Vue3 + Element Plus + Spring Boot</p>
+      <p>星语博客</p>
     </footer>
   </div>
 </template>

@@ -40,6 +40,30 @@ const routes = [
         name: 'Notifications',
         component: () => import('../views/Notifications.vue'),
         meta: { title: '消息中心' }
+      },
+      {
+        path: 'blog',
+        name: 'Blog',
+        component: () => import('../views/Blog.vue'),
+        meta: { title: '博客文章' }
+      },
+      {
+        path: 'blog/write',
+        name: 'BlogWrite',
+        component: () => import('../views/BlogEditor.vue'),
+        meta: { title: '写文章' }
+      },
+      {
+        path: 'blog/edit/:id',
+        name: 'BlogEdit',
+        component: () => import('../views/BlogEditor.vue'),
+        meta: { title: '编辑文章' }
+      },
+      {
+        path: 'blog/:id',
+        name: 'BlogDetail',
+        component: () => import('../views/BlogDetail.vue'),
+        meta: { title: '文章详情' }
       }
     ]
   },

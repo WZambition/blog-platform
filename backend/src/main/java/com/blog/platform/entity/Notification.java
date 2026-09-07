@@ -55,7 +55,7 @@ public class Notification {
     private String content;
 
     /** 是否已读 */
-    @Column(nullable = false)
+    @Column(name = "is_read", nullable = false)
     private Boolean read = false;
 
     /** 创建时间 */
